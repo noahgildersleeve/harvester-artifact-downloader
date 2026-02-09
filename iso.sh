@@ -24,6 +24,7 @@ Setarch()
   harvester_kernel_url=https://releases.rancher.com/harvester/$1/harvester-$1-vmlinuz-$arch
   harvester_ramdisk_url=https://releases.rancher.com/harvester/$1/harvester-$1-initrd-$arch
   harvester_rootfs_url=https://releases.rancher.com/harvester/$1/harvester-$1-rootfs-$arch.squashfs
+  harvester_netinstall_url=https://releases.rancher.com/harvester/$1/harvester-$1-amd64-net-install.iso
   harvester_sha512=https://releases.rancher.com/harvester/$1/harvester-$1-$arch.sha512
 }
 Setlink()
@@ -41,37 +42,53 @@ Download()
   if [ -z "$2" ]
   then
     echo "first parameter"
-    wget -nc $harvester_iso_url -O harvester-$1-$arch.iso
-    wget -nc $harvester_kernel_url -O harvester-$1-vmlinuz-$arch
-    wget -nc $harvester_ramdisk_url -O harvester-$1-initrd-$arch
-    wget -nc $harvester_rootfs_url -O harvester-$1-rootfs-$arch.squashfs
-    wget -nc $harvester_sha512 -O harvester-$1-$arch.sha512
-    sha512sum -c harvester-$1-$arch.sha512
+    # This checks if the checksum works and re-downloads the artifcats if it doesn't
+    wget $harvester_sha512 -O harvester-$1-$arch.sha512
+    if
+      ! output=$(sha512sum -c harvester-$1-$arch.sha512)
+    then
+      wget $harvester_iso_url -O harvester-$1-$arch.iso
+      wget $harvester_netinstall_url -O harvester-$1-$arch-net-install.iso
+      wget $harvester_kernel_url -O harvester-$1-vmlinuz-$arch
+      wget $harvester_ramdisk_url -O harvester-$1-initrd-$arch
+      wget $harvester_rootfs_url -O harvester-$1-rootfs-$arch.squashfs
+    fi
   else
     if [ -z "$3" ]
       then
         # This downloads the release to a new directory that was already created.
         # It also overwrites anything there due to it being used with dynamic branches
         echo "second parameter"
-        wget $harvester_iso_url -O harvester-$2-$arch.iso
-        wget $harvester_kernel_url -O harvester-$2-vmlinuz-$arch
-        wget $harvester_ramdisk_url -O harvester-$2-initrd-$arch
-        wget $harvester_rootfs_url -O harvester-$2-rootfs-$arch.squashfs
+        # This checks if the checksum works and re-downloads the artifcats if it doesn't
+        wget $harvester_sha512 -O harvester-$1-$arch.sha512
+        if
+          ! output=$(sha512sum -c harvester-$1-$arch.sha512)
+        then
+          wget $harvester_iso_url -O harvester-$2-$arch.iso
+          wget $harvester_netinstall_url -O harvester-$2-$arch-net-install.iso
+          wget $harvester_kernel_url -O harvester-$2-vmlinuz-$arch
+          wget $harvester_ramdisk_url -O harvester-$2-initrd-$arch
+          wget $harvester_rootfs_url -O harvester-$2-rootfs-$arch.squashfs
+        fi
       else
         echo "third parameter"
         mkdir ../$1
         cd ../$1
-        wget -nc $harvester_iso_url -O harvester-$1-$arch.iso
-        wget -nc $harvester_kernel_url -O harvester-$1-vmlinuz-$arch
-        wget -nc $harvester_ramdisk_url -O harvester-$1-initrd-$arch
-        wget -nc $harvester_rootfs_url -O harvester-$1-rootfs-$arch.squashfs
-        wget -nc $harvester_sha512 -O harvester-$1-$arch.sha512
-        sha512sum -c harvester-$1-$arch.sha512
+        # This checks if the checksum works and re-downloads the artifcats if it doesn't
+        wget $harvester_sha512 -O harvester-$1-$arch.sha512
+        if
+          ! output=$(sha512sum -c harvester-$1-$arch.sha512)
+        then
+          wget $harvester_iso_url -O harvester-$1-$arch.iso
+          wget $harvester_netinstall_url -O harvester-$1-$arch-net-install.iso
+          wget $harvester_kernel_url -O harvester-$1-vmlinuz-$arch
+          wget $harvester_ramdisk_url -O harvester-$1-initrd-$arch
+          wget $harvester_rootfs_url -O harvester-$1-rootfs-$arch.squashfs
+        fi
         cd ../$2
         Setlink $1 $2
       fi
     fi
-
 }
 
 while getopts ":hax" option; do
