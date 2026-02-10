@@ -1,4 +1,5 @@
 #!/bin/bash
+
 Help()
 {
    # Display Help
@@ -11,6 +12,7 @@ Help()
    echo "-s                   This is optional if you need to symlink the destination directory to a existing release."
    echo
 }
+
 
 Setarch()
 {
@@ -91,17 +93,10 @@ Download()
     fi
 }
 
-while getopts ":hax" option; do
-   case $option in
-      h) # display Help
-         Help
-         exit;;
-   esac
-done
-
 if [ -z "$1" ]
   then
     echo "No version selected for download"
+    Help
     exit;
     fi
 # This will check if there is a separate output version and if not it will
